@@ -1,0 +1,14 @@
+#goal
+bool start
+---
+#result
+bool finish
+---
+#feedback
+float64 achieved_orientation_x
+float64 achieved_orientation_y
+float64 achieved_orientation_z
+float64 achieved_orientation_w
+float64 achieved_position_x
+float64 achieved_position_y
+float64 achieved_position_z
