@@ -37,6 +37,8 @@ class SendEEOppositeServer():
         self.move_group_1.set_pose_reference_frame('fixed/base_link')
         self.move_group_2.set_pose_reference_frame('mobile_base_link')
 
+        self.move_group_1.set_planner_id('PTP')
+
         # Action Server Initialization part
         self._action_name = name
 
@@ -105,4 +107,4 @@ if __name__ == '__main__':
     # rospy.set_param('/robot_description', rospy.get_param('/fixed/robot_description'))
     rospy.init_node('send_ee_opposite_action')
     server = SendEEOppositeServer(rospy.get_name())
-    # rospy.spin()
+    rospy.spin()
