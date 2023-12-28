@@ -83,7 +83,7 @@ class MoveEEServer():
             pose_goal.orientation.y = wpose.orientation.y 
             pose_goal.orientation.z = wpose.orientation.z 
             pose_goal.orientation.w = wpose.orientation.w 
-            pose_goal.position.x = wpose.position.x + 0.5
+            pose_goal.position.x = wpose.position.x - 0.5
             pose_goal.position.y = wpose.position.y
             pose_goal.position.z = wpose.position.z
 
@@ -92,7 +92,11 @@ class MoveEEServer():
 
             success, self._trajectory, self.planning_time, error_code = self.move_group_1.plan()
 
-            print("\nPlanning Time:\n", self.planning_time)
+            secs = self._trajectory.joint_trajectory.points[-1].time_from_start.secs
+            nsecs = self._trajectory.joint_trajectory.points[-1].time_from_start.nsecs
+
+            print("secs:", secs)
+            print("nsecs:", nsecs)
 
             self.move_group_1.execute(self._trajectory, True)
 
