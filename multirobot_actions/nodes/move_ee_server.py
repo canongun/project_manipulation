@@ -83,9 +83,9 @@ class MoveEEServer():
             pose_goal.orientation.y = wpose.orientation.y 
             pose_goal.orientation.z = wpose.orientation.z 
             pose_goal.orientation.w = wpose.orientation.w 
-            pose_goal.position.x = wpose.position.x
+            pose_goal.position.x = wpose.position.x + 0.5
             pose_goal.position.y = wpose.position.y
-            pose_goal.position.z = wpose.position.z - 0.5
+            pose_goal.position.z = wpose.position.z
 
 
             self.move_group_1.set_pose_target(pose_goal)
@@ -121,4 +121,4 @@ if __name__ == '__main__':
     # rospy.set_param('/robot_description', rospy.get_param('/fixed/robot_description'))
     rospy.init_node('move_ee_action')
     server = MoveEEServer(rospy.get_name())
-    # rospy.spin()
+    rospy.spin()
