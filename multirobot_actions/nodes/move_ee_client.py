@@ -6,7 +6,7 @@ import rospy
 import actionlib
 import multirobot_actions.msg
 
-def send_ee_opposite_client():
+def move_ee_client():
 
     rospy.loginfo("Sending ee to the opposite...")
     
@@ -28,8 +28,8 @@ if __name__ == '__main__':
     try:
         # Initialize a rospy node so that the SimpleActionClient can
         # publish and subscribe over ROS
-        rospy.init_node('send_ee_opposite_client_py')
-        result = send_ee_opposite_client()
+        rospy.init_node('move_ee_client_py')
+        result = move_ee_client()
         
 
     except rospy.ROSInterruptException:
