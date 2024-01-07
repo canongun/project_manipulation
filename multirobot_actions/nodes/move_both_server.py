@@ -11,6 +11,7 @@ from moveit_msgs.msg import RobotTrajectory
 import multirobot_actions.msg
 from multirobot_actions.msg import ee_planAction, ee_planFeedback, ee_planResult
 from multirobot_actions.msg import move_platformResult
+from multirobot_services.srv import GroundTruthListener
 
 
 class MoveBothServer():
@@ -126,7 +127,31 @@ class MoveBothServer():
 
                 # Wait for the server to finish performing the action
                 client.wait_for_result()
-                
+
+                # Starting the ground truth listener service
+                rospy.loginfo("Requesting ground truth listener service")
+                rospy.wait_for_service('/ground_truth_listener')
+
+                ground_truth_listener = rospy.ServiceProxy('/ground_truth_listener', # service name
+                                                GroundTruthListener   # service type
+                                                )
+                resp1 = ground_truth_listener(True)
+
+                # Pose information for the final pose of the slave arm
+                final_pose = geometry_msgs.msg.Pose()
+                final_pose.position.x = resp1.link_info[0]
+                final_pose.position.y = resp1.link_info[1] - 0.1
+                final_pose.position.z = resp1.link_info[2]
+                final_pose.orientation.x = resp1.link_info[3]
+                final_pose.orientation.y = resp1.link_info[4]
+                final_pose.orientation.z = -resp1.link_info[5]
+                final_pose.orientation.w = resp1.link_info[6]
+
+                self.move_group_1.set_pose_target(final_pose)
+
+                success, self._trajectory, self.planning_time, error_code = self.move_group_1.plan()
+
+                self.move_group_1.execute(self._trajectory, True)
 
                 _result.finish = True
                 _result2.finish = True
