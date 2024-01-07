@@ -1,0 +1,5 @@
+<launch>
+
+    <node name="ground_truth_listener_server" pkg="multirobot_services" type="ground_truth_listener_server.py" output="screen" />
+    
+</launch>
