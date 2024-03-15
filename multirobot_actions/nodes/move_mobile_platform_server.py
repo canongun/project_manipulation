@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist
 import actionlib
-from multirobot_actions.msg import move_platformAction, move_platformFeedback, move_platformResult
+from multirobot_actions.msg import move_platformAction, move_platformResult
 
 class MoveMobileServer():
     def __init__(self, name):

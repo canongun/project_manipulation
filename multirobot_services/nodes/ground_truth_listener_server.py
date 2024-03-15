@@ -1,12 +1,8 @@
 #!/usr/bin/python3
 
 import rospy
-from geometry_msgs.msg import Pose
 from nav_msgs.msg import Odometry
-
 from multirobot_services.srv import GroundTruthListener, GroundTruthListenerResponse
-
-
 
 class GroundTruthListenerNode:
     """
@@ -20,7 +16,7 @@ class GroundTruthListenerNode:
 
         self.message_received = False  # Flag to indicate whether a message has been received
 
-        service = rospy.Service('ground_truth_listener',    # service name
+        rospy.Service('ground_truth_listener',    # service name
                                 GroundTruthListener,                # service type
                                 self.ground_truth_listener           # function service provides
                                 )
@@ -32,9 +28,9 @@ class GroundTruthListenerNode:
 
     def ground_truth_listener(self, req):
         
-        if req.start == True:
+        if req.start:
 
-            sub = rospy.Subscriber('/ground_truth/mobile_tool0_state', Odometry, self.callback)
+            rospy.Subscriber('/ground_truth/mobile_tool0_state', Odometry, self.callback)
 
             # Wait until a message is received before printing
             while not self.message_received:
