@@ -29,3 +29,61 @@ Specify the direction and offset amount int the code, then just execute:
 rosrun multirobot_state_publisher mr_ee_cartesian_path_publisher.py
 
 ```
+
+---
+
+## Multirobot Services
+
+ROS Service packages for multirobot project.
+
+__ground_truth_listener_server.py__
+
+It creates a server that listens to the ground truth of the mobile arm's "tool0" link, and returns a Response that includes the position and orientation information of the link when there is a request.
+
+Launching the services:
+
+```
+roslaunch multirobot_services multirobot_service.launch
+
+```
+
+## Multirobot Actions
+
+ROS Action packages for multirobot project.
+
+__send_ee_opposite_server.py__
+
+It sends the fixed arm to the opposite side of the mobile arm, aligning the Z-axis.
+
+__move_mobile_platform_server.py__
+
+It executes commands to move the mobile platform.
+
+__move_both_server.py__
+
+It includes the algorithms to move both fixed and mobie arm synchronously.
+
+Launching the Actions:
+
+```
+roslaunch multirobot_actions multirobot_action.launch
+
+```
+
+After, launching both Services and Actions, users should execute the following lines in order:
+
+First, set both arms to their "operation_ready" pose by usinng their MoveIt! packages.
+
+Second, execute:
+
+```
+rosrun multirobot_actions send_ee_opposite_client.py
+
+```
+
+Third, execute:
+
+```
+rosrun multirobot_actions move_both_client.py
+
+```
