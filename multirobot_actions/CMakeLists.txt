@@ -63,7 +63,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_action_files(
   FILES
   ee_plan.action
-  move_platform.action
+  traj_plan.action
 )
 
 ## Generate added messages and services with any dependencies listed here
