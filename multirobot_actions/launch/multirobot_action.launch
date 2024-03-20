@@ -21,5 +21,12 @@
     >
     </node>
 
+    <node
+        pkg="multirobot_actions"
+        type="mobile_platform_rotation_controller_action_server.py"
+        name="mobile_platform_rotation_controller_action"
+    >
+    </node>
+
 
 </launch>
