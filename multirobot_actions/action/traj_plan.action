@@ -1,0 +1,10 @@
+#goal
+bool start
+float64 linear
+float64 tetha
+---
+#result
+bool finish
+---
+#feedback
+bool isMoving
