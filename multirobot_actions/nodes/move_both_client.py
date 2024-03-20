@@ -8,13 +8,13 @@ import multirobot_actions.msg
 
 def send_ee_opposite_client():
     
-    client = actionlib.SimpleActionClient('move_both_action', multirobot_actions.msg.ee_planAction)
+    client = actionlib.SimpleActionClient('move_both_action', multirobot_actions.msg.traj_planAction)
 
     # Wait until the action server has started up and started listening for goals.
     client.wait_for_server()
 
     # Creates a goal to send to the action server.
-    goal = multirobot_actions.msg.ee_planGoal(start = True)
+    goal = multirobot_actions.msg.traj_planGoal(start = True, linear = 0.2, tetha = -45)
 
     # Send the goal to the action server
     client.send_goal(goal)
