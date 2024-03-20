@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist
 import actionlib
-from multirobot_actions.msg import move_platformAction, move_platformResult
+from multirobot_actions.msg import traj_planAction, traj_planResult
 
 class MoveMobileServer():
     def __init__(self, name):
@@ -16,7 +16,7 @@ class MoveMobileServer():
         self._action_name = name
 
         self._as = actionlib.SimpleActionServer(self._action_name,      # Server name string
-                                    move_platformAction,                # Action message type
+                                    traj_planAction,                # Action message type
                                     self.publish_velocity,              # Action Function
                                     auto_start = False 
                                     )
@@ -51,11 +51,11 @@ class MoveMobileServer():
     def publish_velocity(self, goal):
 
         if goal.start:
-            _result = move_platformResult()
+            _result = traj_planResult()
 
             self.t0 = rospy.Time.now().to_sec()
             self.current_distance = 0
-            self.distance_x = goal.goal_x # [m]
+            self.distance_x = goal.linear # [m]
 
             if self.distance_x < 0:
                 self.move_backward()
