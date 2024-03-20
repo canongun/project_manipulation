@@ -10,13 +10,13 @@ def send_ee_opposite_client():
 
     rospy.loginfo("Sending ee to the opposite...")
     
-    client = actionlib.SimpleActionClient('send_ee_opposite_action', multirobot_actions.msg.ee_planAction)
+    client = actionlib.SimpleActionClient('send_ee_opposite_action', multirobot_actions.msg.traj_planAction)
 
     # Wait until the action server has started up and started listening for goals.
     client.wait_for_server()
 
     # Creates a goal to send to the action server.
-    goal = multirobot_actions.msg.ee_planGoal(start = True)
+    goal = multirobot_actions.msg.traj_planGoal(start = True, linear = 0, tetha = 0)
 
     # Send the goal to the action server
     client.send_goal(goal)

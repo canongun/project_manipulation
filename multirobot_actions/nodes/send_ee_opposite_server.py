@@ -5,8 +5,10 @@ import rospy
 import moveit_commander
 import geometry_msgs.msg
 import actionlib
+import math
 
-from multirobot_actions.msg import ee_planAction, ee_planFeedback, ee_planResult
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from multirobot_actions.msg import traj_planAction, traj_planResult
 
 class SendEEOppositeServer():
     # Create messages that are used to publish feedback/result
@@ -42,7 +44,7 @@ class SendEEOppositeServer():
         self._action_name = name
 
         self._as = actionlib.SimpleActionServer(self._action_name,      # Server name string
-                                    ee_planAction,                # Action message type
+                                    traj_planAction,                # Action message type
                                     self.publish_position,              # Action Function
                                     auto_start = False 
                                     )
@@ -52,35 +54,34 @@ class SendEEOppositeServer():
     def publish_position(self, goal):
 
         if goal:
-            _feedback = ee_planFeedback()
-            _result = ee_planResult()
+            _result = traj_planResult()
             apose = self.move_group_2.get_current_pose().pose
 
-            _feedback.achieved_orientation_x = apose.orientation.x
-            _feedback.achieved_orientation_y = apose.orientation.y
-            _feedback.achieved_orientation_z = apose.orientation.z
-            _feedback.achieved_orientation_w = apose.orientation.w
-            _feedback.achieved_position_x = apose.position.x
-            _feedback.achieved_position_y = apose.position.y
-            _feedback.achieved_position_z = apose.position.z
+            # Get Quaternions of the mobile arm and convert into Euler
+            orientation_q = apose.orientation
+            orientation_q_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+            (self.roll, self.pitch, self.yaw) = euler_from_quaternion(orientation_q_list)
             
+            # Calculate the roration for the fixed arm the send it to the opposite side
+            self.yaw += math.pi + goal.tetha * math.pi/180
+            (self.x_alt, self.y_alt, self.z_alt, self.w_alt) = quaternion_from_euler(self.roll, self.pitch, self.yaw)
+        
+
             pose_goal = geometry_msgs.msg.Pose()
-            pose_goal.orientation.x = apose.orientation.x 
-            pose_goal.orientation.y = -apose.orientation.y 
-            pose_goal.orientation.z = apose.orientation.z 
-            pose_goal.orientation.w = apose.orientation.w 
-            pose_goal.position.x = apose.position.x - 0.443 # 0.450-0.007 because of the transformation from odom to fixed_base_link
-            pose_goal.position.y = apose.position.y + 1.4
-            pose_goal.position.z = apose.position.z + 0.350 # 0.4-0.05 because of the transformation from odom to fixed_base_link
+            pose_goal.orientation.x = self.x_alt
+            pose_goal.orientation.y = self.y_alt 
+            pose_goal.orientation.z = self.z_alt
+            pose_goal.orientation.w = self.w_alt
+            pose_goal.position.x = apose.position.x + rospy.get_param("/mobile_x")
+            pose_goal.position.y = apose.position.y + rospy.get_param("/mobile_y") - 0.1
+            pose_goal.position.z = apose.position.z + rospy.get_param("/mobile_z") - 0.05 # -0.05 because of the transformation from odom to fixed_base_link
 
             self.move_group_1.set_pose_target(pose_goal)
 
             # Call the planner to compute the plan and execute it
             # 'go()' returns a boolean indicating whether the plan and execute it
             success = self.move_group_1.go(wait=True)
-
-            self._as.publish_feedback(_feedback)
-
+            
             if success:
                 _result.finish = True
 
