@@ -59,6 +59,10 @@ __move_mobile_platform_server.py__
 
 It executes commands to move the mobile platform.
 
+__mobile_platform_rotation_controller_server.py__
+
+PID rotation controller for mobile robot platform in order to be more accurate when rotating.
+
 __move_both_server.py__
 
 It includes the algorithms to move both fixed and mobie arm synchronously.
@@ -77,13 +81,8 @@ First, set both arms to their "operation_ready" pose by usinng their MoveIt! pac
 Second, execute:
 
 ```
-rosrun multirobot_actions send_ee_opposite_client.py
-
-```
-
-Third, execute:
-
-```
 rosrun multirobot_actions move_both_client.py
 
 ```
+
+With changing the action message parameters in 'move_both_client.py' script, users can alter the linear position and angle.
