@@ -5,12 +5,12 @@ import rospy
 import moveit_commander
 import actionlib
 import geometry_msgs.msg
-from geometry_msgs.msg import PoseStamped
+import math
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from moveit_msgs.msg import RobotTrajectory
 
 import multirobot_actions.msg
-from multirobot_actions.msg import ee_planAction, ee_planFeedback, ee_planResult
-from multirobot_actions.msg import move_platformResult
+from multirobot_actions.msg import traj_planAction, traj_planFeedback, traj_planResult
 from multirobot_services.srv import GroundTruthListener
 
 
@@ -57,7 +57,7 @@ class MoveBothServer():
         self._action_name = name
 
         self._as = actionlib.SimpleActionServer(self._action_name,      # Server name string
-                                    ee_planAction,                # Action message type
+                                    traj_planAction,                # Action message type
                                     self.publish_position,              # Action Function
                                     auto_start = False 
                                     )
@@ -67,34 +67,63 @@ class MoveBothServer():
 
     def publish_position(self, goal):
 
-        if goal:
-            _feedback = ee_planFeedback()
-            _result = ee_planResult()
-            _result2 = move_platformResult()
+        if goal.start:
+            _feedback = traj_planFeedback()
+            _result = traj_planResult()
 
-            self.Δx = -0.5
-            self.Δy = 0
-            self.Δz = 0
+            self.linear = goal.linear
+            self.tetha = goal.tetha
+            
+            # Send the slave arm in front of the master arm
+            rospy.loginfo("Sending ee to the opposite...")
+            client = actionlib.SimpleActionClient('send_ee_opposite_action', multirobot_actions.msg.traj_planAction)
+            # Wait until the action server has started up and started listening for goals.
+            client.wait_for_server()
+            # Send goal to send the slave arm in front of the master arm
+            goal = multirobot_actions.msg.traj_planGoal(start = True, linear = 0, tetha = 0)
+            # Send the goal to the action server
+            client.send_goal(goal)
+            # Wait for the server to finish performing the action
+            client.wait_for_result()
+            rospy.sleep(1)
+
+            client = actionlib.SimpleActionClient('send_ee_opposite_action', multirobot_actions.msg.traj_planAction)
+            # Wait until the action server has started up and started listening for goals.
+            client.wait_for_server()
+
+            # Set client for mobile platform rotation
+            client2 = actionlib.SimpleActionClient('mobile_platform_rotation_controller_action', multirobot_actions.msg.traj_planAction)
+            # Wait until the action server has started up and started listening for goals.
+            client2.wait_for_server()
+
+            # Send goal to send the slave arm in front of the master arm
+            goal = multirobot_actions.msg.traj_planGoal(start = True, linear = self.linear, tetha = self.tetha)
+            # Send the goal to the action server
+            client.send_goal(goal)
+
+            # Send goal to start rotation controller of the mobile platform
+            goal2 = multirobot_actions.msg.traj_planGoal(start = True, linear = self.linear, tetha = self.tetha)
+            # Send the goal to the action server
+            client2.send_goal(goal2)
+
+            # Wait for the server to finish performing the action
+            client.wait_for_result()
+            # Wait for the server to finish performing the action
+            client2.wait_for_result()
+            rospy.sleep(2)
+
+            self.move_group_1.set_planner_id('LIN')
             
             wpose = self.move_group_1.get_current_pose().pose
-
-            _feedback.achieved_orientation_x = wpose.orientation.x
-            _feedback.achieved_orientation_y = wpose.orientation.y
-            _feedback.achieved_orientation_z = wpose.orientation.z
-            _feedback.achieved_orientation_w = wpose.orientation.w
-            _feedback.achieved_position_x = wpose.position.x
-            _feedback.achieved_position_y = wpose.position.y
-            _feedback.achieved_position_z = wpose.position.z
 
             pose_goal = geometry_msgs.msg.Pose()
             pose_goal.orientation.x = wpose.orientation.x 
             pose_goal.orientation.y = wpose.orientation.y 
             pose_goal.orientation.z = wpose.orientation.z 
             pose_goal.orientation.w = wpose.orientation.w 
-            pose_goal.position.x = wpose.position.x + self.Δx
-            pose_goal.position.y = wpose.position.y + self.Δy
-            pose_goal.position.z = wpose.position.z + self.Δz
-
+            pose_goal.position.x = wpose.position.x + self.linear * math.cos(self.tetha * math.pi/180)
+            pose_goal.position.y = wpose.position.y + self.linear * math.sin(self.tetha * math.pi/180)
+            pose_goal.position.z = wpose.position.z
 
             self.move_group_1.set_pose_target(pose_goal)
 
@@ -108,20 +137,13 @@ class MoveBothServer():
 
             if success:
 
-                client = actionlib.SimpleActionClient('move_mobile_action', multirobot_actions.msg.move_platformAction)
-
+                client = actionlib.SimpleActionClient('move_mobile_action', multirobot_actions.msg.traj_planAction)
                 # Wait until the action server has started up and started listening for goals.
                 client.wait_for_server()
-
                 # Creates a goal to send to the action server.
-                goal2 = multirobot_actions.msg.move_platformGoal(start = True,
-                                                        goal_x = self.Δx,
-                                                        goal_y = self.Δy,
-                                                        goal_z = self.Δz  
-                                                        )
-
+                goal = multirobot_actions.msg.traj_planGoal(start = True, linear = self.linear, tetha = self.tetha)
                 # Send the goal to the action server
-                client.send_goal(goal2)
+                client.send_goal(goal)
                 
                 self.move_group_1.execute(self._trajectory, True)
 
@@ -137,15 +159,22 @@ class MoveBothServer():
                                                 )
                 resp1 = ground_truth_listener(True)
 
+                orientation_q_list = [resp1.link_info[3], resp1.link_info[4], resp1.link_info[5], resp1.link_info[6]]
+                (roll, pitch, yaw) = euler_from_quaternion(orientation_q_list)
+
+                yaw += math.pi
+
+                (x_alt, y_alt, z_alt, w_alt) = quaternion_from_euler(roll, pitch, yaw)
+
                 # Pose information for the final pose of the slave arm
                 final_pose = geometry_msgs.msg.Pose()
-                final_pose.position.x = resp1.link_info[0]
-                final_pose.position.y = resp1.link_info[1] - 0.1
+                final_pose.position.x = resp1.link_info[0] - 0.1 * math.cos(self.tetha * math.pi/180)
+                final_pose.position.y = resp1.link_info[1] + 0.1 * math.sin(self.tetha * math.pi/180)
                 final_pose.position.z = resp1.link_info[2]
-                final_pose.orientation.x = resp1.link_info[3]
-                final_pose.orientation.y = resp1.link_info[4]
-                final_pose.orientation.z = -resp1.link_info[5]
-                final_pose.orientation.w = resp1.link_info[6]
+                final_pose.orientation.x = x_alt
+                final_pose.orientation.y = y_alt
+                final_pose.orientation.z = z_alt
+                final_pose.orientation.w = w_alt
 
                 self.move_group_1.set_pose_target(final_pose)
 
@@ -154,7 +183,6 @@ class MoveBothServer():
                 self.move_group_1.execute(self._trajectory, True)
 
                 _result.finish = True
-                _result2.finish = True
 
                 rospy.loginfo('%s: Operation Result: Succeeded' % self._action_name)
                 self._as.set_succeeded(_result, "True")
