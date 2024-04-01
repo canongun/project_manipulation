@@ -4,19 +4,19 @@ import rospy
 from nav_msgs.msg import Odometry
 from multirobot_services.srv import GroundTruthListener, GroundTruthListenerResponse
 
-class GroundTruthListenerNode:
+class GroundTruthListenerMobileTool0Node:
     """
     The Multirobot Topic Listener
     """
 
     def __init__(self):
-        rospy.init_node('ground_truth_listener_server')
+        rospy.init_node('ground_truth_listener_mobile_tool0_server')
 
         self.pose = Odometry()
 
         self.message_received = False  # Flag to indicate whether a message has been received
 
-        rospy.Service('ground_truth_listener',    # service name
+        rospy.Service('ground_truth_listener_mobile_tool0',    # service name
                                 GroundTruthListener,                # service type
                                 self.ground_truth_listener           # function service provides
                                 )
@@ -57,7 +57,7 @@ class GroundTruthListenerNode:
 
 def main():
     print("Listening to 'ground_truth/mobile_tool0_state' topic")
-    node = GroundTruthListenerNode()
+    node = GroundTruthListenerMobileTool0Node()
     node.run()
     
 if __name__ == '__main__':
