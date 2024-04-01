@@ -6,12 +6,10 @@ import moveit_commander
 import actionlib
 import geometry_msgs.msg
 import math
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from moveit_msgs.msg import RobotTrajectory
 
 import multirobot_actions.msg
 from multirobot_actions.msg import traj_planAction, traj_planFeedback, traj_planResult
-from multirobot_services.srv import GroundTruthListener
 
 
 class MoveBothServer():
@@ -73,19 +71,6 @@ class MoveBothServer():
 
             self.linear = goal.linear
             self.tetha = goal.tetha
-            
-            # Send the slave arm in front of the master arm
-            rospy.loginfo("Sending ee to the opposite...")
-            client = actionlib.SimpleActionClient('send_ee_opposite_action', multirobot_actions.msg.traj_planAction)
-            # Wait until the action server has started up and started listening for goals.
-            client.wait_for_server()
-            # Send goal to send the slave arm in front of the master arm
-            goal = multirobot_actions.msg.traj_planGoal(start = True, linear = 0, tetha = 0)
-            # Send the goal to the action server
-            client.send_goal(goal)
-            # Wait for the server to finish performing the action
-            client.wait_for_result()
-            rospy.sleep(1)
 
             client = actionlib.SimpleActionClient('send_ee_opposite_action', multirobot_actions.msg.traj_planAction)
             # Wait until the action server has started up and started listening for goals.
@@ -150,37 +135,20 @@ class MoveBothServer():
                 # Wait for the server to finish performing the action
                 client.wait_for_result()
 
-                # Starting the ground truth listener service
-                rospy.loginfo("Requesting ground truth listener service")
-                rospy.wait_for_service('/ground_truth_listener')
 
-                ground_truth_listener = rospy.ServiceProxy('/ground_truth_listener', # service name
-                                                GroundTruthListener   # service type
-                                                )
-                resp1 = ground_truth_listener(True)
-
-                orientation_q_list = [resp1.link_info[3], resp1.link_info[4], resp1.link_info[5], resp1.link_info[6]]
-                (roll, pitch, yaw) = euler_from_quaternion(orientation_q_list)
-
-                yaw += math.pi
-
-                (x_alt, y_alt, z_alt, w_alt) = quaternion_from_euler(roll, pitch, yaw)
-
-                # Pose information for the final pose of the slave arm
-                final_pose = geometry_msgs.msg.Pose()
-                final_pose.position.x = resp1.link_info[0] - 0.1 * math.cos(self.tetha * math.pi/180)
-                final_pose.position.y = resp1.link_info[1] + 0.1 * math.sin(self.tetha * math.pi/180)
-                final_pose.position.z = resp1.link_info[2]
-                final_pose.orientation.x = x_alt
-                final_pose.orientation.y = y_alt
-                final_pose.orientation.z = z_alt
-                final_pose.orientation.w = w_alt
-
-                self.move_group_1.set_pose_target(final_pose)
-
-                success, self._trajectory, self.planning_time, error_code = self.move_group_1.plan()
-
+                client = actionlib.SimpleActionClient('align_ee_opposite_action', multirobot_actions.msg.traj_planAction)
+                # Wait until the action server has started up and started listening for goals.
+                client.wait_for_server()
+                # Creates a goal to send to the action server.
+                goal = multirobot_actions.msg.traj_planGoal(start = True, linear = self.linear, tetha = self.tetha)
+                # Send the goal to the action server
+                client.send_goal(goal)
+                
                 self.move_group_1.execute(self._trajectory, True)
+
+                # Wait for the server to finish performing the action
+                client.wait_for_result()
+
 
                 _result.finish = True
 
