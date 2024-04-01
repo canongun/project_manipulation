@@ -23,7 +23,6 @@ class RotationControllerServer():
 
         # Heading
         self.Θ = 0.0
-        self.target = -45
 
         ## Maintaining values of the integrated control error and its derivative
         self.integral_ctrl_err = 0.0
@@ -95,7 +94,7 @@ class RotationControllerServer():
             while abs(self.heading_error) >= ANG_VEL_THRES:
                 cmd_vel = Twist()
                 # cmd_vel.angular.z = max(min(self.heading_ctrl(self.Θ, self.target), MAX_ANG_VEL), -MAX_ANG_VEL)
-                cmd_vel.angular.z = self.heading_ctrl(self.Θ, self.target)
+                cmd_vel.angular.z = self.heading_ctrl(self.Θ, goal.tetha)
                 rospy.loginfo("\nAngular Velocity={}\n".format(cmd_vel.angular.z))
                 self.cmd_vel_pub.publish(cmd_vel)
                 rate.sleep()
