@@ -35,9 +35,6 @@ class SendEEOppositeServer():
         self.move_group_1 = moveit_commander.MoveGroupCommander(group_name_1, robot_description="/fixed/robot_description", ns="fixed")
         self.move_group_2 = moveit_commander.MoveGroupCommander(group_name_2)
 
-        self.move_group_1.set_pose_reference_frame('fixed/base_link')
-        self.move_group_2.set_pose_reference_frame('mobile_base_link')
-
         self.move_group_1.set_planner_id('PTP')
 
         # Action Server Initialization part
@@ -56,6 +53,7 @@ class SendEEOppositeServer():
         if goal:
             _result = traj_planResult()
             apose = self.move_group_2.get_current_pose().pose
+            #IMPORTANT: apose (mobile_arm)'s planning frame is base_link! So the 'tf' is from 'base_link' to 'mobile_tool0'
 
             # Get Quaternions of the mobile arm and convert into Euler
             orientation_q = apose.orientation
@@ -65,16 +63,23 @@ class SendEEOppositeServer():
             # Calculate the roration for the fixed arm the send it to the opposite side
             self.yaw += math.pi + goal.tetha * math.pi/180
             (self.x_alt, self.y_alt, self.z_alt, self.w_alt) = quaternion_from_euler(self.roll, self.pitch, self.yaw)
+
+            center_mobile_x = apose.position.x - 0.4
+            center_mobile_y = apose.position.y
         
+            r = math.sqrt(center_mobile_x**2 + center_mobile_y**2) #  Hypotenuse from mobile_base_link to mobile_tool0
+            β = math.atan(center_mobile_y / center_mobile_x) #  Angle between x and y axis
 
             pose_goal = geometry_msgs.msg.Pose()
             pose_goal.orientation.x = self.x_alt
             pose_goal.orientation.y = self.y_alt 
             pose_goal.orientation.z = self.z_alt
             pose_goal.orientation.w = self.w_alt
-            pose_goal.position.x = apose.position.x + rospy.get_param("/mobile_x")
-            pose_goal.position.y = apose.position.y + rospy.get_param("/mobile_y") - 0.1
+            pose_goal.position.x = r * math.cos(β + goal.tetha * math.pi/180) + 0.4 + rospy.get_param("/mobile_x") - 0.1 * math.sin(-goal.tetha * math.pi/180)
+            pose_goal.position.y = r * math.sin(β + goal.tetha * math.pi/180) + rospy.get_param("/mobile_y") - 0.1 * math.cos(goal.tetha * math.pi/180)
             pose_goal.position.z = apose.position.z + rospy.get_param("/mobile_z") - 0.05 # -0.05 because of the transformation from odom to fixed_base_link
+
+            print('\nBETA= {}, r= {}, POSE= {}'.format(β, r, pose_goal))
 
             self.move_group_1.set_pose_target(pose_goal)
 
