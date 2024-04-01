@@ -28,5 +28,12 @@
     >
     </node>
 
+    <node
+        pkg="multirobot_actions"
+        type="align_ee_opposite_server.py"
+        name="align_ee_opposite_action"
+    >
+    </node>
+
 
 </launch>
