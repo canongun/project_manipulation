@@ -35,11 +35,4 @@
     >
     </node>
 
-    <node
-        pkg="multirobot_actions"
-        type="freeze_mobile_ee_server.py"
-        name="freeze_mobile_ee_action"
-    >
-    </node>
-
 </launch>
