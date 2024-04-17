@@ -37,7 +37,7 @@ class FreezeMobileEEServer():
         self.move_group_1 = moveit_commander.MoveGroupCommander(group_name_1, robot_description="/fixed/robot_description", ns="fixed")
         self.move_group_2 = moveit_commander.MoveGroupCommander(group_name_2)
 
-        self.move_group_2.set_planner_id('RRTConnect')
+        self.move_group_2.set_planner_id('PTP')
 
         self.move_group_2.set_max_acceleration_scaling_factor(1)
         self.move_group_2.set_max_velocity_scaling_factor(1)
@@ -68,6 +68,14 @@ class FreezeMobileEEServer():
             
             mobile_arm_pose = self.move_group_2.get_current_pose().pose
 
+            position_mobile_tool0 = [mobile_arm_pose.orientation.x, 
+                                        mobile_arm_pose.orientation.y, 
+                                        mobile_arm_pose.orientation.z, 
+                                        mobile_arm_pose.orientation.w
+                                        ]
+               
+            (roll_mobile_tool0, pitch_mobile_tool0, yaw_mobile_tool0) = euler_from_quaternion(position_mobile_tool0)
+
             while True:
                 resp_base_link = ground_truth_listener_base_link(True)
 
@@ -79,39 +87,37 @@ class FreezeMobileEEServer():
             
                 (roll_base_link, pitch_base_link, yaw_base_link) = euler_from_quaternion(position_base_link)
 
-                roll_base_link += -math.pi / 2
-                yaw_base_link += -math.pi
+                roll_base_link -= math.pi / 2
+                yaw_base_link -= math.pi
 
-                position_mobile_tool0 = [mobile_arm_pose.orientation.x, 
-                                        mobile_arm_pose.orientation.y, 
-                                        mobile_arm_pose.orientation.z, 
-                                        mobile_arm_pose.orientation.w
-                                        ]
-                
-                (roll_mobile_tool0, pitch_mobile_tool0, yaw_mobile_tool0) = euler_from_quaternion(position_mobile_tool0)
+                print('\nTOOL0= {} {} {}'.format(roll_mobile_tool0, pitch_mobile_tool0, yaw_mobile_tool0))
+                print('\nBASE_LINK= {} {} {}'.format(roll_base_link, pitch_base_link, yaw_base_link))
 
-                self.move_group_2.set_start_state_to_current_state()
+                Δor_R = roll_mobile_tool0 - roll_base_link
+                Δor_P = pitch_mobile_tool0 - pitch_base_link
+                Δor_Y = yaw_mobile_tool0 - yaw_base_link
 
-                Δor_R = roll_base_link - roll_mobile_tool0 
-                Δor_P = pitch_base_link - pitch_mobile_tool0
-                Δor_Y = yaw_base_link - yaw_mobile_tool0
+                al_R = roll_mobile_tool0 + Δor_R
+                al_P = pitch_mobile_tool0 - Δor_P
+                al_Y = yaw_mobile_tool0 + Δor_Y
 
                 rospy.loginfo("ΔR= {},  ΔP= {},  ΔY= {}".format(Δor_R, Δor_P, Δor_Y))
+                rospy.loginfo("al_R= {},  al_P= {},  al_Y= {}".format(al_R, al_P, al_Y))
 
-                (Δor_x, Δor_y, Δor_z, Δor_w) = quaternion_from_euler(Δor_R, Δor_P, Δor_Y)
+                (arm_or_x, arm_or_y, arm_or_z, arm_or_w) = quaternion_from_euler(al_R, al_P, al_Y)
                 
                 Δpos_x = rospy.get_param("/mobile_x") - resp_base_link.link_info[0] 
                 Δpos_y = rospy.get_param("/mobile_y") - resp_base_link.link_info[1]
                 Δpos_z = rospy.get_param("/mobile_z") - resp_base_link.link_info[2]
 
                 pose_goal = geometry_msgs.msg.Pose()
-                pose_goal.orientation.x = mobile_arm_pose.orientation.x #+ Δor_x
-                pose_goal.orientation.y = mobile_arm_pose.orientation.y #+ Δor_y
-                pose_goal.orientation.z = mobile_arm_pose.orientation.z #+ Δor_z
-                pose_goal.orientation.w = mobile_arm_pose.orientation.w #+ Δor_w
+                pose_goal.orientation.x = arm_or_x
+                pose_goal.orientation.y = arm_or_y
+                pose_goal.orientation.z = arm_or_z
+                pose_goal.orientation.w = arm_or_w
                 pose_goal.position.x = mobile_arm_pose.position.x + Δpos_x
                 pose_goal.position.y = mobile_arm_pose.position.y + Δpos_y
-                pose_goal.position.z = mobile_arm_pose.position.z + Δpos_z
+                pose_goal.position.z = mobile_arm_pose.position.z + Δpos_z - 0.05
 
                 rospy.loginfo("{}".format(pose_goal))
 
@@ -123,28 +129,7 @@ class FreezeMobileEEServer():
 
                 self.move_group_2.execute(self._trajectory, True)
 
-                rospy.sleep(1/120)
-
-                # if success:
-                #     _result.finish = True
-
-                #     rospy.loginfo('%s: Operation Result: Succeeded' % self._action_name)
-                #     self._as.set_succeeded(_result, "True")
-                    
-                #     # Call 'stop()' to ensure that there is no residual movement
-                #     self.move_group_2.stop()
-                #     # Clear targets after planning poses
-                #     self.move_group_2.clear_pose_targets()
-
-                # else:
-                #     _result.finish = False
-                #     rospy.loginfo('%s: Operation Result: Failed' % self._action_name)
-                #     self._as.set_aborted(_result, "False")
-
-                #     # Call 'stop()' to ensure that there is no residual movement
-                #     self.move_group_2.stop()
-                #     # Clear targets after planning poses
-                #     self.move_group_2.clear_pose_targets()
+                rospy.sleep(1/100)
 
 if __name__ == '__main__':
     rospy.init_node('freeze_mobile_ee_action')
