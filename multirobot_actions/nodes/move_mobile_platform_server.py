@@ -7,7 +7,7 @@ from multirobot_actions.msg import traj_planAction, traj_planResult
 
 class MoveMobileServer():
     def __init__(self, name):
-        self.speed = 0.1 # [m/s]
+        self.speed = 0.025 # [m/s]
 
         self.velocity_publisher = rospy.Publisher('/robot/cmd_vel', Twist, queue_size=10)
         self.vel_msg = Twist()
