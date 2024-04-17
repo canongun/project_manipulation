@@ -90,9 +90,6 @@ class FreezeMobileEEServer():
                 roll_base_link -= math.pi / 2
                 yaw_base_link -= math.pi
 
-                print('\nTOOL0= {} {} {}'.format(roll_mobile_tool0, pitch_mobile_tool0, yaw_mobile_tool0))
-                print('\nBASE_LINK= {} {} {}'.format(roll_base_link, pitch_base_link, yaw_base_link))
-
                 Δor_R = roll_mobile_tool0 - roll_base_link
                 Δor_P = pitch_mobile_tool0 - pitch_base_link
                 Δor_Y = yaw_mobile_tool0 - yaw_base_link
@@ -100,9 +97,6 @@ class FreezeMobileEEServer():
                 al_R = roll_mobile_tool0 + Δor_R
                 al_P = pitch_mobile_tool0 - Δor_P
                 al_Y = yaw_mobile_tool0 + Δor_Y
-
-                rospy.loginfo("ΔR= {},  ΔP= {},  ΔY= {}".format(Δor_R, Δor_P, Δor_Y))
-                rospy.loginfo("al_R= {},  al_P= {},  al_Y= {}".format(al_R, al_P, al_Y))
 
                 (arm_or_x, arm_or_y, arm_or_z, arm_or_w) = quaternion_from_euler(al_R, al_P, al_Y)
                 
