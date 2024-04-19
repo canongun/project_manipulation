@@ -7,30 +7,18 @@ import actionlib
 import multirobot_actions.msg
 
 def move_mobile_platform_client():
-    i = 0
-    while i < 3:
-        client = actionlib.SimpleActionClient('move_mobile_action', multirobot_actions.msg.traj_planAction)
+    client = actionlib.SimpleActionClient('move_mobile_action', multirobot_actions.msg.traj_planAction)
 
-        # Wait until the action server has started up and started listening for goals.
-        client.wait_for_server()
+    # Wait until the action server has started up and started listening for goals.
+    client.wait_for_server()
 
-        # Creates a goal to send to the action server.
-        goal = multirobot_actions.msg.traj_planGoal(start = True, linear = -0.2, tetha = 0)
+    # Creates a goal to send to the action server.
+    goal = multirobot_actions.msg.traj_planGoal(start = True, linear = -0.2, tetha = 0)
 
-        # Send the goal to the action server
-        client.send_goal(goal)
-        # Wait for the server to finish performing the action
-        client.wait_for_result()
-
-        # Creates a goal to send to the action server.
-        goal = multirobot_actions.msg.traj_planGoal(start = True, linear = 0.2, tetha = 0)
-
-        # Send the goal to the action server
-        client.send_goal(goal)
-        # Wait for the server to finish performing the action
-        client.wait_for_result()
-
-        i += 1
+    # Send the goal to the action server
+    client.send_goal(goal)
+    # Wait for the server to finish performing the action
+    client.wait_for_result()
 
 if __name__ == '__main__':
     try:
