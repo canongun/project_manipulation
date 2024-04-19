@@ -8,7 +8,7 @@ from tf.transformations import euler_from_quaternion
 from multirobot_actions.msg import traj_planAction, traj_planResult
 from geometry_msgs.msg import Twist
 
-MAX_ANG_VEL = 0.4
+MAX_ANG_VEL = 0.09
 ANG_VEL_THRES = 0.00007
 ΔΤ = 1/20
 
@@ -23,11 +23,6 @@ class RotationControllerServer():
 
         # Heading
         self.Θ = 0.0
-
-        ## Maintaining values of the integrated control error and its derivative
-        self.integral_ctrl_err = 0.0
-        self.previous_ctrl_err = 0.0
-        self.heading_error = 1.0
 
         self.heading_sub = rospy.Subscriber('/imu', Imu, self.imu_callback)
 
@@ -85,8 +80,13 @@ class RotationControllerServer():
         return cmd_angular_velocity
 
     def publish_rotation(self, goal):
-
         if goal.start:
+
+            ## Maintaining values of the integrated control error and its derivative
+            self.integral_ctrl_err = 0.0
+            self.previous_ctrl_err = 0.0
+            self.heading_error = 1.0
+
             _result = traj_planResult()
 
             rate = rospy.Rate(1/ΔΤ)
@@ -103,8 +103,7 @@ class RotationControllerServer():
             rospy.loginfo('%s: Operation Result: Succeeded' % self._action_name)
             self._as.set_succeeded(_result, "True")
 
-            
-                 
+
 def main():
     rospy.init_node("mobile_platform_rotation_controller_action")
     RotationControllerServer(rospy.get_name())
