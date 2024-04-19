@@ -3,13 +3,8 @@
 import sys
 import rospy
 import moveit_commander
-import moveit_msgs.msg
 import geometry_msgs.msg
 
-from std_msgs.msg import String
-from moveit_commander.conversions import pose_to_list
-
-from math import pi, tau, dist, fabs, cos
 
 class EEPositionPublisherNode:
     """
@@ -55,7 +50,7 @@ class EEPositionPublisherNode:
         # print("============ End effector link: %s" % eef_link)
 
         # We can get a list of all the groups in the robot:
-        group_names = self.robot.get_group_names()
+        self.robot.get_group_names()
         print("============ Available Planning Groups:", self.robot.get_group_names())
 
         # Sometimes for debugging it is useful to print the entire state of the
@@ -83,7 +78,7 @@ class EEPositionPublisherNode:
         # Now, we call the planner to compute the plan and execute it
 
         # `go()` returns a boolean indicating whether the planning and execution was successful.
-        success = self.move_group_1.go(wait=True)
+        self.move_group_1.go(wait=True)
         # Calling `stop()` ensures that there is no residual movement
         self.move_group_1.stop()
         # It is always good to clear your targets after planning with poses.
