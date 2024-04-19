@@ -4,9 +4,7 @@ import sys
 import rospy
 import moveit_commander
 import actionlib
-import copy
 import geometry_msgs.msg
-from geometry_msgs.msg import PoseStamped
 from moveit_msgs.msg import RobotTrajectory
 
 from multirobot_actions.msg import ee_planAction, ee_planFeedback, ee_planResult
