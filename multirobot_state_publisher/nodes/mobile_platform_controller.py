@@ -101,7 +101,7 @@ class MobilePlatformControllerServer():
 
     def user_input(self):
         while not rospy.is_shutdown():
-            input_command = input("Enter command and value (e.g., 'linear 0.3' or 'theta 30'): ")
+            input_command = input("Enter command and value (e.g., 'linear 0.3' or 'tetha 30'): ")
             parts = input_command.split()
             if len(parts) == 2:
                 self.command = parts[0].lower()
