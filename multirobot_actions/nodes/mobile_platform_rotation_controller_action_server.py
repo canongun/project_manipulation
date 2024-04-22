@@ -8,7 +8,7 @@ from tf.transformations import euler_from_quaternion
 from multirobot_actions.msg import traj_planAction, traj_planResult
 from geometry_msgs.msg import Twist
 
-MAX_ANG_VEL = 0.09
+MAX_ANG_VEL = 0.075
 ANG_VEL_THRES = 0.00007
 ΔΤ = 1/20
 
