@@ -12,6 +12,8 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from multirobot_actions.msg import ee_planAction, ee_planResult
 from multirobot_services.srv import GroundTruthListener
 
+LINK_DIST = 0.081
+
 class FreezeMobileEEServer():
     # Create messages that are used to publish feedback/result
 
@@ -42,6 +44,9 @@ class FreezeMobileEEServer():
         self.move_group_2.set_max_acceleration_scaling_factor(1)
         self.move_group_2.set_max_velocity_scaling_factor(1)
 
+        # Transformation is from base_link -> mobile_tool0
+        self.mobile_arm_pose = self.move_group_2.get_current_pose().pose
+
         # Action Server Initialization part
         self._action_name = name
 
@@ -65,19 +70,19 @@ class FreezeMobileEEServer():
             ground_truth_listener_base_link = rospy.ServiceProxy('/ground_truth_listener_base_link', # service name
                                             GroundTruthListener   # service type
                                             )
-            
-            mobile_arm_pose = self.move_group_2.get_current_pose().pose
 
-            position_mobile_tool0 = [mobile_arm_pose.orientation.x, 
-                                        mobile_arm_pose.orientation.y, 
-                                        mobile_arm_pose.orientation.z, 
-                                        mobile_arm_pose.orientation.w
-                                        ]
+            position_mobile_tool0 = [self.mobile_arm_pose.orientation.x, 
+                                    self.mobile_arm_pose.orientation.y, 
+                                    self.mobile_arm_pose.orientation.z, 
+                                    self.mobile_arm_pose.orientation.w
+                                    ]
                
             (roll_mobile_tool0, pitch_mobile_tool0, yaw_mobile_tool0) = euler_from_quaternion(position_mobile_tool0)
 
             while True:
                 resp_base_link = ground_truth_listener_base_link(True)
+
+                self.mobile_arm_pose_refresh = self.move_group_2.get_current_pose().pose
 
                 position_base_link = [resp_base_link.link_info[3], 
                                     resp_base_link.link_info[4], 
@@ -86,6 +91,8 @@ class FreezeMobileEEServer():
                                     ]
             
                 (roll_base_link, pitch_base_link, yaw_base_link) = euler_from_quaternion(position_base_link)
+
+                yaw_real = -yaw_base_link
 
                 roll_base_link -= math.pi / 2
                 yaw_base_link -= math.pi
@@ -99,19 +106,25 @@ class FreezeMobileEEServer():
                 al_Y = yaw_mobile_tool0 + Δor_Y
 
                 (arm_or_x, arm_or_y, arm_or_z, arm_or_w) = quaternion_from_euler(al_R, al_P, al_Y)
-                
-                Δpos_x = rospy.get_param("/mobile_x") - resp_base_link.link_info[0] 
-                Δpos_y = rospy.get_param("/mobile_y") - resp_base_link.link_info[1]
-                Δpos_z = rospy.get_param("/mobile_z") - resp_base_link.link_info[2]
+
+                Δpos_x = resp_base_link.link_info[0] - rospy.get_param("/mobile_x")
+                Δpos_y = resp_base_link.link_info[1] - rospy.get_param("/mobile_y")
+                Δpos_z = resp_base_link.link_info[2] - rospy.get_param("/mobile_z")
+
+                r = math.sqrt(Δpos_x**2 + Δpos_y**2)
+                β = math.pi - math.atan(Δpos_y / Δpos_x)
+
+                rot_x = self.mobile_arm_pose.position.x * math.cos(yaw_real) - self.mobile_arm_pose.position.y * math.sin(yaw_real) + LINK_DIST - LINK_DIST * math.cos(yaw_real)
+                rot_y = self.mobile_arm_pose.position.x * math.sin(yaw_real) + self.mobile_arm_pose.position.y * math.cos(yaw_real) - LINK_DIST * math.sin(yaw_real)
 
                 pose_goal = geometry_msgs.msg.Pose()
                 pose_goal.orientation.x = arm_or_x
                 pose_goal.orientation.y = arm_or_y
                 pose_goal.orientation.z = arm_or_z
                 pose_goal.orientation.w = arm_or_w
-                pose_goal.position.x = mobile_arm_pose.position.x + Δpos_x
-                pose_goal.position.y = mobile_arm_pose.position.y + Δpos_y
-                pose_goal.position.z = mobile_arm_pose.position.z + Δpos_z - 0.05
+                pose_goal.position.x = rot_x + r * math.cos(β)
+                pose_goal.position.y = rot_y + r * math.sin(β)
+                pose_goal.position.z = self.mobile_arm_pose.position.z + Δpos_z - 0.05
 
                 rospy.loginfo("{}".format(pose_goal))
 
