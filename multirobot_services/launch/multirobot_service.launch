@@ -3,5 +3,6 @@
     <node name="ground_truth_listener_base_link_server" pkg="multirobot_services" type="ground_truth_listener_base_link_server.py" output="screen" />
     <node name="ground_truth_listener_mobile_tool0_server" pkg="multirobot_services" type="ground_truth_listener_mobile_tool0_server.py" output="screen" />
     <node name="imu_listener_server" pkg="multirobot_services" type="imu_listener_server.py" output="screen" />
+    <node name="odometry_listener_server" pkg="multirobot_services" type="odometry_listener_server.py" output="screen" />
 
 </launch>
