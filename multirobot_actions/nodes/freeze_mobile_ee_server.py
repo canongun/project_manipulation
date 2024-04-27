@@ -66,14 +66,9 @@ class FreezeMobileEEServer():
 
             # Starting the ground truth listener service
             rospy.loginfo("Requesting ground truth listener service")
-            rospy.wait_for_service('/imu_listener')
-            rospy.wait_for_service('/odometry_listener')
+            rospy.wait_for_service('/ekf_odometry_listener')
 
-            imu_listener = rospy.ServiceProxy('/imu_listener', # service name
-                                            GroundTruthListener   # service type
-                                            )
-            
-            odom_listener = rospy.ServiceProxy('/odometry_listener', # service name
+            ekf_odom_listener = rospy.ServiceProxy('/ekf_odometry_listener', # service name
                                             GroundTruthListener   # service type
                                             )
 
@@ -85,19 +80,18 @@ class FreezeMobileEEServer():
                
             (roll_mobile_tool0, pitch_mobile_tool0, yaw_mobile_tool0) = euler_from_quaternion(position_mobile_tool0)
 
-            resp_odom = odom_listener(True)
+            resp_efk_odom = ekf_odom_listener(True)
 
-            x0 = resp_odom.link_info[0] + LINK_DIST * math.cos(0)
-            y0 = resp_odom.link_info[1] + LINK_DIST * math.sin(0)
+            x0 = resp_efk_odom.link_info[0] + LINK_DIST * math.cos(0)
+            y0 = resp_efk_odom.link_info[1] + LINK_DIST * math.sin(0)
 
             while True:
-                resp_imu = imu_listener(True)
-                resp_odom = odom_listener(True)
+                resp_efk_odom = ekf_odom_listener(True)
 
-                position_base_link = [resp_imu.link_info[0], 
-                                    resp_imu.link_info[1], 
-                                    resp_imu.link_info[2], 
-                                    resp_imu.link_info[3]
+                position_base_link = [resp_efk_odom.link_info[3], 
+                                    resp_efk_odom.link_info[4], 
+                                    resp_efk_odom.link_info[5], 
+                                    resp_efk_odom.link_info[6]
                                     ]
             
                 (roll_base_link, pitch_base_link, yaw_base_link) = euler_from_quaternion(position_base_link)
@@ -116,10 +110,9 @@ class FreezeMobileEEServer():
                 al_Y = yaw_mobile_tool0 + Δor_Y
 
                 (arm_or_x, arm_or_y, arm_or_z, arm_or_w) = quaternion_from_euler(al_R, al_P, al_Y)
-
                 
-                Δpos_x = resp_odom.link_info[0] + LINK_DIST * math.cos(yaw_real)
-                Δpos_y = resp_odom.link_info[1] + LINK_DIST * math.sin(yaw_real)
+                Δpos_x = resp_efk_odom.link_info[0] + LINK_DIST * math.cos(yaw_real)
+                Δpos_y = resp_efk_odom.link_info[1] + LINK_DIST * math.sin(yaw_real)
                 # Δpos_z = resp_base_link.link_info[2] - rospy.get_param("/mobile_z")
 
                 print("POS_X= {},   POS_Y= {},  YAW= {}".format(Δpos_x, Δpos_y, yaw_real))
