@@ -14,7 +14,7 @@ def send_ee_opposite_client():
     client.wait_for_server()
 
     # Creates a goal to send to the action server.
-    goal = multirobot_actions.msg.traj_planGoal(start = True, linear = 0.2, tetha = -45)
+    goal = multirobot_actions.msg.traj_planGoal(start = True, linear = 0.2, tetha = 0.0)
 
     # Send the goal to the action server
     client.send_goal(goal)
