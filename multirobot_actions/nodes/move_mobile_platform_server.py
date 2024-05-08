@@ -7,7 +7,7 @@ from multirobot_actions.msg import traj_planAction, traj_planResult
 
 class MoveMobileServer():
     def __init__(self, name):
-        self.speed = 0.025 # [m/s]
+        self.speed = 0.1 # [m/s]
 
         self.velocity_publisher = rospy.Publisher('/robot/cmd_vel', Twist, queue_size=10)
         self.vel_msg = Twist()
@@ -46,8 +46,7 @@ class MoveMobileServer():
         self.vel_msg.angular.x = 0
         self.vel_msg.angular.y = 0
         self.vel_msg.angular.z = 0
-
-        
+ 
     def publish_velocity(self, goal):
 
         if goal.start:
@@ -81,11 +80,7 @@ class MoveMobileServer():
                 rospy.loginfo('%s: Operation Result: Failed' % self._action_name)
                 self._as.set_aborted(_result, "False")
         
-        
-    
-        
 
-            
 if __name__ == '__main__':
     # rospy.set_param('/robot_description', rospy.get_param('/fixed/robot_description'))
     rospy.init_node('move_mobile_action')
