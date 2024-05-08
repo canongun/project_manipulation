@@ -6,6 +6,7 @@ import moveit_commander
 import geometry_msgs.msg
 import actionlib
 import math
+# import time
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
@@ -85,6 +86,9 @@ class FreezeMobileEEServer():
             x0 = resp_efk_odom.link_info[0] + LINK_DIST * math.cos(0)
             y0 = resp_efk_odom.link_info[1] + LINK_DIST * math.sin(0)
 
+            # counter = 0
+            # start_time = time.time()
+            
             while True:
                 resp_efk_odom = ekf_odom_listener(True)
 
@@ -142,7 +146,15 @@ class FreezeMobileEEServer():
 
                 self.move_group_2.execute(self._trajectory, True)
 
-                rospy.sleep(PUB_HZ)
+                # print("COUNTER:", counter)
+                # counter += 1
+                # # Check elapsed time every 1000 iterations
+                # if counter % 100 == 0:
+                #     elapsed_time = time.time() - start_time
+                #     frequency = counter / elapsed_time
+                #     print(f"Loop frequency: {frequency:.2f} iterations per second")
+
+                # rospy.sleep(PUB_HZ)
 
 if __name__ == '__main__':
     rospy.init_node('freeze_mobile_ee_action')
