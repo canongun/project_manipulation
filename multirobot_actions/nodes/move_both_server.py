@@ -72,31 +72,6 @@ class MoveBothServer():
             self.linear = goal.linear
             self.tetha = goal.tetha
 
-            client = actionlib.SimpleActionClient('send_ee_opposite_action', multirobot_actions.msg.traj_planAction)
-            # Wait until the action server has started up and started listening for goals.
-            client.wait_for_server()
-
-            # Set client for mobile platform rotation
-            client2 = actionlib.SimpleActionClient('mobile_platform_rotation_controller_action', multirobot_actions.msg.traj_planAction)
-            # Wait until the action server has started up and started listening for goals.
-            client2.wait_for_server()
-
-            # Send goal to send the slave arm in front of the master arm
-            goal = multirobot_actions.msg.traj_planGoal(start = True, linear = self.linear, tetha = self.tetha)
-            # Send the goal to the action server
-            client.send_goal(goal)
-
-            # Send goal to start rotation controller of the mobile platform
-            goal2 = multirobot_actions.msg.traj_planGoal(start = True, linear = self.linear, tetha = self.tetha)
-            # Send the goal to the action server
-            client2.send_goal(goal2)
-
-            # Wait for the server to finish performing the action
-            client.wait_for_result()
-            # Wait for the server to finish performing the action
-            client2.wait_for_result()
-            rospy.sleep(2)
-
             self.move_group_1.set_planner_id('LIN')
             
             wpose = self.move_group_1.get_current_pose().pose
@@ -121,20 +96,18 @@ class MoveBothServer():
             print("nsecs:", nsecs)
 
             if success:
-
-                client = actionlib.SimpleActionClient('move_mobile_action', multirobot_actions.msg.traj_planAction)
+                client = actionlib.SimpleActionClient('move_mobile_localization_action', multirobot_actions.msg.traj_planAction)
                 # Wait until the action server has started up and started listening for goals.
                 client.wait_for_server()
                 # Creates a goal to send to the action server.
                 goal = multirobot_actions.msg.traj_planGoal(start = True, linear = self.linear, tetha = self.tetha)
                 # Send the goal to the action server
                 client.send_goal(goal)
-                
+
                 self.move_group_1.execute(self._trajectory, True)
 
                 # Wait for the server to finish performing the action
                 client.wait_for_result()
-
 
                 client = actionlib.SimpleActionClient('align_ee_opposite_action', multirobot_actions.msg.traj_planAction)
                 # Wait until the action server has started up and started listening for goals.
