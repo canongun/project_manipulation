@@ -54,6 +54,7 @@ class SendEEOppositeServer():
             _result = traj_planResult()
             apose = self.move_group_2.get_current_pose().pose
             #IMPORTANT: apose (mobile_arm)'s planning frame is base_link! So the 'tf' is from 'base_link' to 'mobile_tool0'
+            print("MOBILE ARM POSE= {}".format(apose))
 
             # Get Quaternions of the mobile arm and convert into Euler
             orientation_q = apose.orientation
@@ -64,7 +65,7 @@ class SendEEOppositeServer():
             self.yaw += math.pi + goal.tetha * math.pi/180
             (self.x_alt, self.y_alt, self.z_alt, self.w_alt) = quaternion_from_euler(self.roll, self.pitch, self.yaw)
 
-            center_mobile_x = apose.position.x - 0.4
+            center_mobile_x = apose.position.x
             center_mobile_y = apose.position.y
         
             r = math.sqrt(center_mobile_x**2 + center_mobile_y**2) #  Hypotenuse from mobile_base_link to mobile_tool0
@@ -75,7 +76,7 @@ class SendEEOppositeServer():
             pose_goal.orientation.y = self.y_alt 
             pose_goal.orientation.z = self.z_alt
             pose_goal.orientation.w = self.w_alt
-            pose_goal.position.x = r * math.cos(β + goal.tetha * math.pi/180) + 0.4 + rospy.get_param("/mobile_x") - 0.1 * math.sin(-goal.tetha * math.pi/180)
+            pose_goal.position.x = r * math.cos(β + goal.tetha * math.pi/180) + rospy.get_param("/mobile_x") - 0.1 * math.sin(-goal.tetha * math.pi/180)
             pose_goal.position.y = r * math.sin(β + goal.tetha * math.pi/180) + rospy.get_param("/mobile_y") - 0.1 * math.cos(goal.tetha * math.pi/180)
             pose_goal.position.z = apose.position.z + rospy.get_param("/mobile_z") - 0.05 # -0.05 because of the transformation from odom to fixed_base_link
 
