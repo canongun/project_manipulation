@@ -35,4 +35,11 @@
     >
     </node>
 
+    <node
+        pkg="multirobot_actions"
+        type="move_mobile_platform_localization_server.py"
+        name="move_mobile_localization_action"
+    >
+    </node>
+
 </launch>
