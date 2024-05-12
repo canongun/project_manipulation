@@ -116,7 +116,7 @@ class FreezeMobileEEServer():
                 (arm_or_x, arm_or_y, arm_or_z, arm_or_w) = quaternion_from_euler(al_R, al_P, al_Y)
                 
                 Δpos_x = resp_efk_odom.link_info[0] + LINK_DIST * math.cos(yaw_real)
-                Δpos_y = resp_efk_odom.link_info[1] + LINK_DIST * math.sin(yaw_real)
+                Δpos_y = resp_efk_odom.link_info[1] - LINK_DIST * math.sin(yaw_real)
                 # Δpos_z = resp_base_link.link_info[2] - rospy.get_param("/mobile_z")
 
                 print("POS_X= {},   POS_Y= {},  YAW= {}".format(Δpos_x, Δpos_y, yaw_real))
