@@ -25,20 +25,16 @@ class FreezeMobileEEServer():
 
         # Instantiating a RobotCommander object. 
         # Provides information such as the robot’s kinematic model and the robot’s current joint states
-        self.robot = moveit_commander.RobotCommander(robot_description="/fixed/robot_description", ns="fixed")
         self.robot_2 = moveit_commander.RobotCommander(robot_description="/robot_description")
 
         # Instantiating a PlanningSceneInterface object. 
         # This provides a remote interface for getting, setting, 
         # and updating the robot’s internal understanding of the surrounding world
-        self.scene = moveit_commander.PlanningSceneInterface(ns="fixed")
         self.scene_2 = moveit_commander.PlanningSceneInterface()
 
         # Instantiating a MoveGroupCommander object. 
         # This object is an interface to a planning group (group of joints).
-        group_name_1 = "fixed_arm"
         group_name_2 = "mobile_arm"
-        self.move_group_1 = moveit_commander.MoveGroupCommander(group_name_1, robot_description="/fixed/robot_description", ns="fixed")
         self.move_group_2 = moveit_commander.MoveGroupCommander(group_name_2)
 
         self.move_group_2.set_planner_id('PTP')
