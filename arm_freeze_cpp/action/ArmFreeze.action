@@ -1,0 +1,8 @@
+#goal
+bool start
+---
+#result
+bool finish
+---
+#feedback
+float64 distance_remaining

@@ -1,0 +1,45 @@
+<launch>
+
+    <node
+        pkg="multirobot_actions"
+        type="send_ee_opposite_server.py"
+        name="send_ee_opposite_action"
+    >
+    </node>
+
+    <node
+        pkg="multirobot_actions"
+        type="move_mobile_platform_server.py"
+        name="move_mobile_action"
+    >
+    </node>
+
+    <node
+        pkg="multirobot_actions"
+        type="move_both_server.py"
+        name="move_both_action"
+    >
+    </node>
+
+    <node
+        pkg="multirobot_actions"
+        type="mobile_platform_rotation_controller_action_server.py"
+        name="mobile_platform_rotation_controller_action"
+    >
+    </node>
+
+    <node
+        pkg="multirobot_actions"
+        type="align_ee_opposite_server.py"
+        name="align_ee_opposite_action"
+    >
+    </node>
+
+    <node
+        pkg="multirobot_actions"
+        type="move_mobile_platform_localization_server.py"
+        name="move_mobile_localization_action"
+    >
+    </node>
+
+</launch>
